@@ -1,11 +1,15 @@
 import numpy as np
+RESOURCES = 17
 OWNER_TRASHOLD = 0.35
 FILE_PATH = "data.csv"
 
-def get_utility(previous_utility: np.ndarray, current_strategy_profile: np.ndarray, 
+def get_utility(previous_utility: np.ndarray, chosen_resources: list[int], 
                 votes: np.ndarray) -> np.ndarray:
     num_players, num_resources = previous_utility.shape
     
+    current_strategy_profile = np.zeros((num_players, num_resources))
+    current_strategy_profile[np.arange(num_players), chosen_resources] = 1
+
     current_utility = np.zeros((num_players, num_resources))
     
     
@@ -20,6 +24,15 @@ def get_utility(previous_utility: np.ndarray, current_strategy_profile: np.ndarr
     
     return current_utility
 
+def get_utility_matrix(previous_utility: np.ndarray, votes: np.ndarray) -> np.ndarray:
+    utility_matrix = np.zeros((RESOURCES,RESOURCES,RESOURCES))
+
+    for i in range(RESOURCES):
+        for j in range(RESOURCES):
+            for k in range(RESOURCES):
+                utility_matrix[i][j][k] = get_utility(previous_utility, [i,j,k], votes)
+    
+    return utility_matrix
 
 
 def load_data(file_path: str) -> np.ndarray:
