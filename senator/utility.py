@@ -1,5 +1,6 @@
 import numpy as np
 RESOURCES = 17
+PLAYERS = 3
 OWNER_TRASHOLD = 0.35
 FILE_PATH = "data.csv"
 
@@ -20,17 +21,17 @@ def get_utility(previous_utility: np.ndarray, chosen_resources: list[int],
     strategy_sum = np.sum(current_strategy_profile, axis=0)
     strategy_sum = np.where(strategy_sum == 0, 1, strategy_sum)
     
-    current_utility += (remaining_votes * current_strategy_profile.T / strategy_sum).T
+    current_utility += (remaining_votes[:, None] * current_strategy_profile.T / strategy_sum[:, None]).T
     
     return current_utility
 
 def get_utility_matrix(previous_utility: np.ndarray, votes: np.ndarray) -> np.ndarray:
-    utility_matrix = np.zeros((RESOURCES,RESOURCES,RESOURCES))
+    utility_matrix = np.zeros((PLAYERS, RESOURCES,RESOURCES,RESOURCES))
 
     for i in range(RESOURCES):
         for j in range(RESOURCES):
             for k in range(RESOURCES):
-                utility_matrix[i][j][k] = get_utility(previous_utility, [i,j,k], votes)
+                utility_matrix[:, i, j, k] = get_utility(previous_utility, [i,j,k], votes).sum(axis=1)
     
     return utility_matrix
 
