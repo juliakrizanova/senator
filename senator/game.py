@@ -12,6 +12,7 @@ def regret_matching(regret: np.ndarray) -> np.ndarray:
 
 class Node:
     def __init__(self, parent, utility_matrix):
+
         self.parent = parent
         self.utility_matrix = utility_matrix
         self.iterations = 0
@@ -63,7 +64,7 @@ class Node:
         """
         self.iterations += 1
         strategy = self.current_strategy
-        player = self.iterations % self._num_players
+        player = (self.iterations -1) % self._num_players
 
         instantaneous_regret = self._get_instaneous_regret(player, strategy)
 
@@ -84,15 +85,21 @@ class Node:
 
 
 class Game:
-    def __init__(self, initial_utility: np.ndarray, votes: np.ndarray):
-        assert len(initial_utility.shape) == 2, "Initial utility should be a 2D array"
+    def __init__(self, initial_utility: np.ndarray, votes: np.ndarray, is_owner: np.ndarray, 
+    owner_loss = 0.8, other_loss = 0, owner_trashold: float = 2.0):
+         
+        self.owner_loss = owner_loss
+        self.other_loss = other_loss
+        self.owner_trashold = owner_trashold
+        self.is_owner = is_owner
         self.votes = votes
         self.initial_utility = initial_utility
-        root_utility_matrix = get_utility_matrix(initial_utility, votes)  # TODO: see what it takes to get the utility matrix
+        root_utility_matrix = get_utility_matrix(initial_utility, votes, is_owner)
         self.root = Node(parent=None, utility_matrix=root_utility_matrix)
 
-    def add_child(self, node: Node, joint_action: np.ndarray, current_utility: np.ndarray, votes: np.ndarray) -> None:
-        child_utility_matrix = get_utility_matrix(current_utility, votes)  # TODO: see what it takes to get the utility matrix
+    def add_child(self, node: Node, joint_action: np.ndarray, current_utility: np.ndarray, 
+    votes: np.ndarray) -> None:
+        child_utility_matrix = get_utility_matrix(current_utility, votes, self.is_owner, self.owner_loss, self.other_loss, self.owner_trashold)  # TODO: see what it takes to get the utility matrix
         node.children[tuple(joint_action)] = Node(parent=node, utility_matrix=child_utility_matrix)
 
     def solve_node_via_rm_plus(self, node: Node, iterations: int = 1000) -> None:
@@ -102,21 +109,29 @@ class Game:
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
-    def run_greedy_search(self, num_expansions: int = 10):
-        """
-        Run a greedy search algorithm, periodically expanding the tree. Each expansion is done by first solving the
-        node using the RM+ algorithm, sampling a joing action, and adding the child to the tree.
-        TODO: decide how to do the expanding. Baseline is to just do a path of length 5.
-        """
+    def run_greedy_search(self, num_expansions: int = 17) -> np.ndarray:
+        
+        actions_in_steps = []
+        strategies_in_steps = []
+        
         current_node = self.root
         utility = self.initial_utility
-        for _ in range(num_expansions):
+
+        print(f"Initial utility\nu: {utility.sum(axis=1)}")
+
+        for i in range(num_expansions):
             self.solve_node_via_rm_plus(current_node)
+            strategies_in_steps.append(current_node.current_strategy)
             joint_action = current_node.sample_joint_action()
-            utility = get_utility(utility, joint_action, self.votes)
-            self.add_child(current_node, joint_action, utility, self.votes) #TODO: check if I want votes as parameter of Game
+            
+            actions_in_steps.append(joint_action)
+
+            utility = get_utility(utility, joint_action, self.votes, self.is_owner, self.owner_loss, self.other_loss, self.owner_trashold)
+            self.add_child(current_node, joint_action, utility, self.votes)
             current_node = current_node.children[tuple(joint_action)]
- 
+
+            print(f"DAY {i} \na: {joint_action} \nu: {np.floor(utility.sum(axis=1))}")
+        return actions_in_steps, utility, strategies_in_steps
 
 
 
