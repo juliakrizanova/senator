@@ -22,7 +22,7 @@ def test_pure_strategy_real_game():
     iterations = 1000
     for _ in range(iterations): 
         owner_loss = np.random.randint(1, 101) * 0.01
-        other_loss = 0
+        other_loss = np.random.randint(1, 101) * 0.01
         owner_trashold = np.random.randint(1, 101) * 0.01
         game = Game(initial_utility, votes, is_owner, owner_loss, other_loss, owner_trashold)
         strategies = game.run_greedy_search()[2]
