@@ -10,7 +10,7 @@ def get_utility(previous_utility: np.ndarray, chosen_resources: list[int],
                 is_owner: np.ndarray = np.zeros((PLAYERS, RESOURCES)),
                 owner_loss: float = 0.8, 
                 other_loss: float = 0,
-                owner_trashold: float = 2.0) -> np.ndarray: 
+                owner_trashold: float = -1) -> np.ndarray: 
     
     num_players, num_resources = previous_utility.shape
     
@@ -35,7 +35,7 @@ def get_utility(previous_utility: np.ndarray, chosen_resources: list[int],
 
 def get_utility_matrix(previous_utility: np.ndarray, votes: np.ndarray, 
                        is_owner: np.ndarray,
-                         owner_loss: float = 0.8, other_loss: float = 0.0, owner_trashold: float = 2.0) -> np.ndarray:
+                         owner_loss: float = 0.8, other_loss: float = 0.0, owner_trashold: float = -1) -> np.ndarray:
     
     utility_matrix = np.zeros((PLAYERS, RESOURCES,RESOURCES,RESOURCES))
 
@@ -52,7 +52,7 @@ def load_data(file_path: str) -> np.ndarray:
     data = np.loadtxt(file_path, delimiter=";", skiprows=1)
     return data
 
-def parse_data(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]: 
+def parse_data(data: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     votes = data[:, 1]
     initial_utility = data[:, [2,3,4]].T
     is_owner = data[:, [5,6,7]].T

@@ -11,7 +11,7 @@ def regret_matching(regret: np.ndarray) -> np.ndarray:
 
 
 class Node:
-    def __init__(self, parent, utility_matrix):
+    def __init__(self, parent: "Node", utility_matrix: np.ndarray) -> None:
 
         self.parent = parent
         self.utility_matrix = utility_matrix
@@ -20,7 +20,9 @@ class Node:
         self._num_players = utility_matrix.shape[0]
         self._num_resources = utility_matrix.shape[1]
         self._cumulative_regret = np.zeros((self._num_players, self._num_resources))
-        self._cumulative_positive_regret = np.zeros((self._num_players, self._num_resources))
+        self._cumulative_positive_regret = np.zeros(
+            (self._num_players, self._num_resources)
+        )
         self.children = {}  # key: action, value: Node
 
     @property
@@ -39,8 +41,12 @@ class Node:
     def _get_instaneous_regret(self, player: int, strategy: np.ndarray) -> np.ndarray:
         opponents = [i for i in range(self._num_players) if i != player]
         utility_matrix = self.utility_matrix[player]
-        for opponent in reversed(opponents):  # We start from the last opponent because `np.tensordot` collapses axes
-            utility_matrix = np.tensordot(utility_matrix, strategy[opponent], axes=([opponent], [0]))  # TODO: check if this is correct
+        for opponent in reversed(
+            opponents
+        ):  # We start from the last opponent because `np.tensordot` collapses axes
+            utility_matrix = np.tensordot(
+                utility_matrix, strategy[opponent], axes=([opponent], [0])
+            )  # TODO: check if this is correct
 
         on_policy_utility = np.sum(utility_matrix * strategy[player], keepdims=True)
         instantaneous_regret = utility_matrix - on_policy_utility
@@ -56,20 +62,24 @@ class Node:
 
             instantaneous_regret = self._get_instaneous_regret(player, strategy)
 
-            self._cumulative_regret[player] = self._cumulative_regret[player] + instantaneous_regret
+            self._cumulative_regret[player] = (
+                self._cumulative_regret[player] + instantaneous_regret
+            )
 
     def rm_plus_step(self) -> None:
         """
         Regret matching plus step. For each player, we compute his regret and compute the new strategy profile.
         """
-        self.iterations += 1
+
         strategy = self.current_strategy
-        player = (self.iterations -1) % self._num_players
+        player = self.iterations % self._num_players
+        self.iterations += 1
 
         instantaneous_regret = self._get_instaneous_regret(player, strategy)
 
         self._cumulative_positive_regret[player] = np.maximum(
-                                self._cumulative_positive_regret[player] + instantaneous_regret, 0)
+            self._cumulative_positive_regret[player] + instantaneous_regret, 0
+        )
 
     def nash_conv(self) -> float:
         """
@@ -85,9 +95,16 @@ class Node:
 
 
 class Game:
-    def __init__(self, initial_utility: np.ndarray, votes: np.ndarray, is_owner: np.ndarray, 
-    owner_loss = 0.8, other_loss = 0, owner_trashold: float = 2.0):
-         
+    def __init__(
+        self,
+        initial_utility: np.ndarray,
+        votes: np.ndarray,
+        is_owner: np.ndarray,
+        owner_loss: float = 0.8,
+        other_loss: float = 0,
+        owner_trashold: float = -1,
+    ) -> None:
+
         self.owner_loss = owner_loss
         self.other_loss = other_loss
         self.owner_trashold = owner_trashold
@@ -97,10 +114,24 @@ class Game:
         root_utility_matrix = get_utility_matrix(initial_utility, votes, is_owner)
         self.root = Node(parent=None, utility_matrix=root_utility_matrix)
 
-    def add_child(self, node: Node, joint_action: np.ndarray, current_utility: np.ndarray, 
-    votes: np.ndarray) -> None:
-        child_utility_matrix = get_utility_matrix(current_utility, votes, self.is_owner, self.owner_loss, self.other_loss, self.owner_trashold)  # TODO: see what it takes to get the utility matrix
-        node.children[tuple(joint_action)] = Node(parent=node, utility_matrix=child_utility_matrix)
+    def add_child(
+        self,
+        node: Node,
+        joint_action: np.ndarray,
+        current_utility: np.ndarray,
+        votes: np.ndarray,
+    ) -> None:
+        child_utility_matrix = get_utility_matrix(
+            current_utility,
+            votes,
+            self.is_owner,
+            self.owner_loss,
+            self.other_loss,
+            self.owner_trashold,
+        )  # TODO: see what it takes to get the utility matrix
+        node.children[tuple(joint_action)] = Node(
+            parent=node, utility_matrix=child_utility_matrix
+        )
 
     def solve_node_via_rm_plus(self, node: Node, iterations: int = 1000) -> None:
         for _ in range(iterations):
@@ -110,10 +141,10 @@ class Game:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
     def run_greedy_search(self, num_expansions: int = 17) -> np.ndarray:
-        
+
         actions_in_steps = []
         strategies_in_steps = []
-        
+
         current_node = self.root
         utility = self.initial_utility
 
@@ -123,15 +154,20 @@ class Game:
             self.solve_node_via_rm_plus(current_node)
             strategies_in_steps.append(current_node.current_strategy)
             joint_action = current_node.sample_joint_action()
-            
+
             actions_in_steps.append(joint_action)
 
-            utility = get_utility(utility, joint_action, self.votes, self.is_owner, self.owner_loss, self.other_loss, self.owner_trashold)
+            utility = get_utility(
+                utility,
+                joint_action,
+                self.votes,
+                self.is_owner,
+                self.owner_loss,
+                self.other_loss,
+                self.owner_trashold,
+            )
             self.add_child(current_node, joint_action, utility, self.votes)
             current_node = current_node.children[tuple(joint_action)]
 
             print(f"DAY {i} \na: {joint_action} \nu: {np.floor(utility.sum(axis=1))}")
         return actions_in_steps, utility, strategies_in_steps
-
-
-
