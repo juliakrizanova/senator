@@ -11,9 +11,16 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     )
 
     parser.add_argument(
+        "--iterations_number",
+        type=int,
+        default=7,
+        help="Number of iterations for which the greedy algorithm is run (default: 7)",
+    )
+
+    parser.add_argument(
         "--owner_loss",
         type=float,
-        default=0.8,
+        default=0.5,
         help="Loss for the owner (default: 0.5)",
     )
     parser.add_argument(
@@ -28,18 +35,21 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     args = parser.parse_args()
 
-    votes, initial_utility, is_owner = parse_data(load_data(FILE_PATH))
+    votes, initial_utility, is_owner = parse_data(load_data())
     game = Game(
         initial_utility,
         votes,
         is_owner,
+        args.num_iterations,
         args.owner_loss,
         args.other_loss,
         args.owner_trashold,
     )
     # game = Game(np.zeros((3,17)),votes)
 
-    actions_in_steps, final_utility, strategies = game.run_greedy_search()
+    actions_in_steps, final_utility, strategies = game.run_greedy_search(
+        game.num_iterations
+    )
     print(strategies)
     # print(final_utility.sum(axis=1))
     return actions_in_steps, final_utility, strategies

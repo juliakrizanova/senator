@@ -11,7 +11,7 @@ def regret_matching(regret: np.ndarray) -> np.ndarray:
 
 
 class Node:
-    def __init__(self, parent: "Node", utility_matrix: np.ndarray) -> None:
+    def __init__(self, parent, utility_matrix: np.ndarray) -> None:
 
         self.parent = parent
         self.utility_matrix = utility_matrix
@@ -23,7 +23,7 @@ class Node:
         self._cumulative_positive_regret = np.zeros(
             (self._num_players, self._num_resources)
         )
-        self.children = {}  # key: action, value: Node
+        self.children: dict[tuple, Node] = {}  # key: action, value: Node
 
     @property
     def current_strategy(self) -> np.ndarray:
@@ -100,11 +100,13 @@ class Game:
         initial_utility: np.ndarray,
         votes: np.ndarray,
         is_owner: np.ndarray,
-        owner_loss: float = 0.8,
+        num_iterations: int = 7,
+        owner_loss: float = 1,
         other_loss: float = 0,
-        owner_trashold: float = -1,
+        owner_trashold: float = 0,
     ) -> None:
 
+        self.num_iterations = num_iterations
         self.owner_loss = owner_loss
         self.other_loss = other_loss
         self.owner_trashold = owner_trashold
@@ -140,7 +142,7 @@ class Game:
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
-    def run_greedy_search(self, num_expansions: int = 17) -> np.ndarray:
+    def run_greedy_search(self, num_iterations: int = 7) -> tuple:
 
         actions_in_steps = []
         strategies_in_steps = []
@@ -150,7 +152,7 @@ class Game:
 
         print(f"Initial utility\nu: {utility.sum(axis=1)}")
 
-        for i in range(num_expansions):
+        for i in range(num_iterations):
             self.solve_node_via_rm_plus(current_node)
             strategies_in_steps.append(current_node.current_strategy)
             joint_action = current_node.sample_joint_action()
