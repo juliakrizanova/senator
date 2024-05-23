@@ -11,7 +11,7 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     )
 
     parser.add_argument(
-        "--iterations_number",
+        "--num_iterations",
         type=int,
         default=7,
         help="Number of iterations for which the greedy algorithm is run (default: 7)",
