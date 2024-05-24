@@ -50,8 +50,6 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     actions_in_steps, final_utility, strategies = game.run_greedy_search(
         game.num_iterations
     )
-    print(strategies)
-    # print(final_utility.sum(axis=1))
     return actions_in_steps, final_utility, strategies
 
 

@@ -27,7 +27,7 @@ class Node:
 
     @property
     def current_strategy(self) -> np.ndarray:
-        strategy = regret_matching(self._cumulative_positive_regret)
+        strategy = regret_matching(self._cumulative_regret)
         return strategy
 
     def sample_joint_action(self) -> np.ndarray:
@@ -54,7 +54,7 @@ class Node:
 
     def rm_step(self) -> None:
         """
-        Regret matching plus step. For each player, we compute his regret and compute the new strategy profile.
+        Regret matching step. For each player, we compute his regret and add it to the cumulative regret.
         """
         self.iterations += 1
         strategy = self.current_strategy
@@ -68,7 +68,7 @@ class Node:
 
     def rm_plus_step(self) -> None:
         """
-        Regret matching plus step. For each player, we compute his regret and compute the new strategy profile.
+        Regret matching plus step. For each player, we compute his regret and add it to the cumulative positive regret.
         """
 
         strategy = self.current_strategy
@@ -142,6 +142,13 @@ class Game:
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
+    def solve_node_via_rm(self, node: Node, iterations: int = 1000) -> None:
+        for _ in range(iterations):
+            node.rm_step()
+
+        if (conv := node.nash_conv()) >= 0.001:
+            print(f"Nash Convexity is {conv}, something is wrong...")
+
     def run_greedy_search(self, num_iterations: int = 7) -> tuple:
 
         actions_in_steps = []
@@ -150,10 +157,10 @@ class Game:
         current_node = self.root
         utility = self.initial_utility
 
-        print(f"Initial utility\nu: {utility.sum(axis=1)}")
+        # print(f"Initial utility\nu: {utility.sum(axis=1)}")
 
         for i in range(num_iterations):
-            self.solve_node_via_rm_plus(current_node)
+            self.solve_node_via_rm(current_node)
             strategies_in_steps.append(current_node.current_strategy)
             joint_action = current_node.sample_joint_action()
 
@@ -171,5 +178,5 @@ class Game:
             self.add_child(current_node, joint_action, utility, self.votes)
             current_node = current_node.children[tuple(joint_action)]
 
-            print(f"DAY {i} \na: {joint_action} \nu: {np.floor(utility.sum(axis=1))}")
+            # print(f"DAY {i} \na: {joint_action} \nu: {np.floor(utility.sum(axis=1))}")
         return actions_in_steps, utility, strategies_in_steps

@@ -2,8 +2,6 @@ import numpy as np
 
 RESOURCES = 17
 PLAYERS = 3
-# OWNER_TRASHOLD = 0.35
-# OWNER_LOSS = 0.8
 FILE_PATH = "data.csv"
 
 
