@@ -21,16 +21,16 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     parser.add_argument(
         "--owner_loss",
         type=float,
-        default=0.5,
+        default=0.9,
         help="Loss for the owner.",
     )
     parser.add_argument(
-        "--other_loss", type=float, default=0.0, help="Loss for others."
+        "--other_loss", type=float, default=0.8, help="Loss for others."
     )
     parser.add_argument(
         "--owner_trashold",
         type=float,
-        default=0.35,
+        default=-1,
         help="Threshold for the owner. Set to -1 to change the model.",
     )
 

@@ -19,16 +19,24 @@ class Node:
 
         self._num_players = utility_matrix.shape[0]
         self._num_resources = utility_matrix.shape[1]
+
         self._cumulative_regret = np.zeros((self._num_players, self._num_resources))
-        self._cumulative_positive_regret = np.zeros(
-            (self._num_players, self._num_resources)
-        )
+        self._cumulative_strategy = np.zeros((self._num_players, self._num_resources))
+
         self.children: dict[tuple, Node] = {}  # key: action, value: Node
 
     @property
     def current_strategy(self) -> np.ndarray:
         strategy = regret_matching(self._cumulative_regret)
         return strategy
+
+    @property
+    def average_strategy(self) -> np.ndarray:
+        strategy = regret_matching(self._cumulative_strategy)
+
+        strategy_sum = strategy.sum(axis=1)
+
+        return strategy / strategy.sum()[:, None]
 
     def sample_joint_action(self) -> np.ndarray:
         """Sample action for each player"""
@@ -65,6 +73,7 @@ class Node:
             self._cumulative_regret[player] = (
                 self._cumulative_regret[player] + instantaneous_regret
             )
+            self._cumulative_strategy += strategy
 
     def rm_plus_step(self) -> None:
         """
@@ -77,9 +86,10 @@ class Node:
 
         instantaneous_regret = self._get_instaneous_regret(player, strategy)
 
-        self._cumulative_positive_regret[player] = np.maximum(
-            self._cumulative_positive_regret[player] + instantaneous_regret, 0
+        self._cumulative_regret[player] = np.maximum(
+            self._cumulative_regret[player] + instantaneous_regret, 0
         )
+        self._cumulative_strategy += self.iterations * strategy
 
     def nash_conv(self) -> float:
         """
