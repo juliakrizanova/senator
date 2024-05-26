@@ -7,30 +7,31 @@ import numpy as np
 def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     parser = argparse.ArgumentParser(
-        description="Run the senator game simulation with specified parameters."
+        description="Run the senator game simulation with specified parameters.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
         "--num_iterations",
         type=int,
         default=7,
-        help="Number of iterations for which the greedy algorithm is run (default: 7)",
+        help="Number of iterations for which the greedy algorithm is run.",
     )
 
     parser.add_argument(
         "--owner_loss",
         type=float,
         default=0.5,
-        help="Loss for the owner (default: 0.5)",
+        help="Loss for the owner.",
     )
     parser.add_argument(
-        "--other_loss", type=float, default=0.0, help="Loss for others (default: 0.0)"
+        "--other_loss", type=float, default=0.0, help="Loss for others."
     )
     parser.add_argument(
         "--owner_trashold",
         type=float,
         default=0.35,
-        help="Threshold for the owner (default: 0.35). Set to -1 to change the model.",
+        help="Threshold for the owner. Set to -1 to change the model.",
     )
 
     args = parser.parse_args()
