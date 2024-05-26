@@ -34,9 +34,7 @@ class Node:
     def average_strategy(self) -> np.ndarray:
         strategy = regret_matching(self._cumulative_strategy)
 
-        strategy_sum = strategy.sum(axis=1)
-
-        return strategy / strategy.sum()[:, None]
+        return strategy
 
     def sample_joint_action(self) -> np.ndarray:
         """Sample action for each player"""
@@ -110,13 +108,11 @@ class Game:
         initial_utility: np.ndarray,
         votes: np.ndarray,
         is_owner: np.ndarray,
-        num_iterations: int = 7,
         owner_loss: float = 1,
         other_loss: float = 0,
         owner_trashold: float = 0,
     ) -> None:
 
-        self.num_iterations = num_iterations
         self.owner_loss = owner_loss
         self.other_loss = other_loss
         self.owner_trashold = owner_trashold
@@ -159,7 +155,7 @@ class Game:
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
-    def run_greedy_search(self, num_iterations: int = 7) -> tuple:
+    def run_greedy_search(self, num_steps: int = 7) -> tuple:
 
         actions_in_steps = []
         strategies_in_steps = []
@@ -169,9 +165,9 @@ class Game:
 
         # print(f"Initial utility\nu: {utility.sum(axis=1)}")
 
-        for i in range(num_iterations):
+        for i in range(num_steps):
             self.solve_node_via_rm(current_node)
-            strategies_in_steps.append(current_node.current_strategy)
+            strategies_in_steps.append(current_node.average_strategy)
             joint_action = current_node.sample_joint_action()
 
             actions_in_steps.append(joint_action)
