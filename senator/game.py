@@ -34,9 +34,7 @@ class Node:
     def average_strategy(self) -> np.ndarray:
         strategy = regret_matching(self._cumulative_strategy)
 
-        strategy_sum = strategy.sum(axis=1)
-
-        return strategy / strategy_sum[:, None]
+        return strategy
 
     def sample_joint_action(self) -> np.ndarray:
         """Sample action for each player"""
