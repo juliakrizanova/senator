@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from senator.game import Game
 from senator.utility import load_data, parse_data
-from experiments.pure_mixed_strategies import contains_mixed_strategy
 
 
 def compute_order(utility_sum: np.ndarray, player: int) -> int:
@@ -71,9 +70,6 @@ def search_loss_parameters(
                 2,
             )
             _, utility, strategies_in_steps = game.run_greedy_search()
-            if contains_mixed_strategy(strategies_in_steps):
-                mixed_strategies += 1
-                print(strategies_in_steps)
 
             utility_sum = np.floor(utility.sum(axis=1))
 
@@ -83,9 +79,6 @@ def search_loss_parameters(
                 num_win += 1
             print(f"round: {(i*num_owner_iterations+1) + (j+1)}")
             print(f"win_ratio: {num_win / (j+1)}")
-            print(
-                f"mixed_strategies_ratio: {mixed_strategies / (i * num_other_iterations + 1 + j)}"
-            )
 
     # save results to a csv file
     columns = ["iteration", "owner_loss", "other_loss", "u1", "u2", "u3"]
