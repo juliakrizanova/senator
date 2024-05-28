@@ -97,7 +97,7 @@ class Node:
         nash_convexity = 0
         for player in range(self._num_players):
             instantaneous_regret = self._get_instaneous_regret(player, strategy)
-            nash_convexity += np.sum(instantaneous_regret * strategy[player])
+            nash_convexity += np.max(instantaneous_regret)
 
         return nash_convexity
 
@@ -167,7 +167,7 @@ class Game:
 
         for i in range(num_steps):
             self.solve_node_via_rm(current_node)
-            strategies_in_steps.append(current_node.average_strategy)
+            strategies_in_steps.append(current_node.current_strategy)
             joint_action = current_node.sample_joint_action()
 
             actions_in_steps.append(joint_action)

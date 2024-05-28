@@ -37,13 +37,13 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     parser.add_argument(
         "--file_path",
         type=float,
-        default=-1,
+        default=FILE_PATH,
         help="Path to the file containing the data.",
     )
 
     args = parser.parse_args()
 
-    votes, initial_utility, is_owner = parse_data(load_data())
+    votes, initial_utility, is_owner = parse_data(load_data(args.file_path))
     game = Game(
         initial_utility,
         votes,
