@@ -36,7 +36,7 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     parser.add_argument(
         "--file_path",
-        type=float,
+        type=str,
         default=FILE_PATH,
         help="Path to the file containing the data.",
     )

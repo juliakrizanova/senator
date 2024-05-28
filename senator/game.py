@@ -97,6 +97,7 @@ class Node:
         nash_convexity = 0
         for player in range(self._num_players):
             instantaneous_regret = self._get_instaneous_regret(player, strategy)
+            assert np.max(instantaneous_regret) >= 0
             nash_convexity += np.max(instantaneous_regret)
 
         return nash_convexity
@@ -141,14 +142,14 @@ class Game:
             parent=node, utility_matrix=child_utility_matrix
         )
 
-    def solve_node_via_rm_plus(self, node: Node, iterations: int = 1000) -> None:
+    def solve_node_via_rm_plus(self, node: Node, iterations: int = 2000) -> None:
         for _ in range(iterations):
             node.rm_plus_step()
 
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
-    def solve_node_via_rm(self, node: Node, iterations: int = 1000) -> None:
+    def solve_node_via_rm(self, node: Node, iterations: int = 2000) -> None:
         for _ in range(iterations):
             node.rm_step()
 
@@ -184,5 +185,5 @@ class Game:
             self.add_child(current_node, joint_action, utility, self.votes)
             current_node = current_node.children[tuple(joint_action)]
 
-            # print(f"DAY {i} \na: {joint_action} \nu: {np.floor(utility.sum(axis=1))}")
+            print(f"DAY {i} \na: {joint_action} \nu: {np.floor(utility.sum(axis=1))}")
         return actions_in_steps, utility, strategies_in_steps
