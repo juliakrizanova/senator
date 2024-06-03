@@ -2,6 +2,7 @@ from senator.utility import *
 from senator.game import *
 import argparse
 import numpy as np
+from senator.intensities import INTENSITIES
 
 
 def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -27,11 +28,12 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     parser.add_argument(
         "--other_loss", type=float, default=0.8, help="Loss for others."
     )
+
     parser.add_argument(
-        "--owner_trashold",
-        type=float,
-        default=-1,
-        help="Threshold for the owner. Set to -1 to change the model.",
+        "--intensities",
+        default="identity",
+        help="Set the intensities function.",
+        choices=INTENSITIES.keys(),
     )
 
     parser.add_argument(
@@ -39,6 +41,13 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         type=str,
         default=FILE_PATH,
         help="Path to the file containing the data.",
+    )
+
+    parser.add_argument(
+        "--owner_trashold",
+        type=float,
+        default=-1,
+        help="Threshold for the owner. Set to -1 for fixed ownership model.",
     )
 
     args = parser.parse_args()
@@ -51,8 +60,8 @@ def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         args.owner_loss,
         args.other_loss,
         args.owner_trashold,
+        args.intensities,
     )
-    # game = Game(np.zeros((3,17)),votes)
 
     actions_in_steps, final_utility, strategies = game.run_greedy_search(args.num_steps)
     return actions_in_steps, final_utility, strategies

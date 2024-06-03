@@ -1,5 +1,6 @@
 import numpy as np
 
+
 RESOURCES = 17
 PLAYERS = 3
 FILE_PATH = "data.csv"
@@ -7,7 +8,7 @@ FILE_PATH = "data.csv"
 
 def get_utility(
     previous_utility: np.ndarray,
-    chosen_resources: list[int],
+    chosen_resources: np.ndarray,
     votes: np.ndarray,
     is_owner: np.ndarray = np.zeros((PLAYERS, RESOURCES)),
     owner_loss: float = 0.8,
@@ -22,7 +23,7 @@ def get_utility(
 
     current_utility = np.zeros((num_players, num_resources))
 
-    if owner_trashold <= 1.0:
+    if owner_trashold > -1:
         is_owner = (
             previous_utility >= owner_trashold * votes
         )  # original variant of the model, where is_owner is computed by using a trashold

@@ -1,5 +1,6 @@
 import numpy as np
 from senator.utility import get_utility_matrix, get_utility
+from senator.intensities import IntensitiesFn, INTENSITIES
 
 
 def regret_matching(regret: np.ndarray) -> np.ndarray:
@@ -11,11 +12,12 @@ def regret_matching(regret: np.ndarray) -> np.ndarray:
 
 
 class Node:
-    def __init__(self, parent, utility_matrix: np.ndarray) -> None:
+    def __init__(self, parent, utility_matrix: np.ndarray, step: int = 0) -> None:
 
         self.parent = parent
         self.utility_matrix = utility_matrix
         self.iterations = 0
+        self.step = step
 
         self._num_players = utility_matrix.shape[0]
         self._num_resources = utility_matrix.shape[1]
@@ -52,7 +54,7 @@ class Node:
         ):  # We start from the last opponent because `np.tensordot` collapses axes
             utility_matrix = np.tensordot(
                 utility_matrix, strategy[opponent], axes=([opponent], [0])
-            )  # TODO: check if this is correct
+            )
 
         on_policy_utility = np.sum(utility_matrix * strategy[player], keepdims=True)
         instantaneous_regret = utility_matrix - on_policy_utility
@@ -97,8 +99,10 @@ class Node:
         nash_convexity = 0
         for player in range(self._num_players):
             instantaneous_regret = self._get_instaneous_regret(player, strategy)
-            assert np.max(instantaneous_regret) >= 0
-            nash_convexity += np.max(instantaneous_regret)
+            assert (
+                max_regret := np.max(instantaneous_regret)
+            ) >= -0.00001, f"instaneous regret: {instantaneous_regret} and current strategy: {strategy}"
+            nash_convexity += max_regret
 
         return nash_convexity
 
@@ -111,17 +115,24 @@ class Game:
         is_owner: np.ndarray,
         owner_loss: float = 1,
         other_loss: float = 0,
-        owner_trashold: float = 0,
+        owner_trashold: float = -1,
+        intensities: str = "identity",
     ) -> None:
 
         self.owner_loss = owner_loss
         self.other_loss = other_loss
         self.owner_trashold = owner_trashold
+        self.intensities = intensities
         self.is_owner = is_owner
         self.votes = votes
         self.initial_utility = initial_utility
-        root_utility_matrix = get_utility_matrix(initial_utility, votes, is_owner)
+        root_utility_matrix = get_utility_matrix(
+            initial_utility, self.intensities_fn(0, votes), is_owner
+        )
         self.root = Node(parent=None, utility_matrix=root_utility_matrix)
+
+    def intensities_fn(self, num_step: int, votes: np.ndarray) -> IntensitiesFn:
+        return INTENSITIES[self.intensities](num_step, votes)
 
     def add_child(
         self,
@@ -132,26 +143,34 @@ class Game:
     ) -> None:
         child_utility_matrix = get_utility_matrix(
             current_utility,
-            votes,
+            self.intensities_fn(node.step, votes),
             self.is_owner,
             self.owner_loss,
             self.other_loss,
             self.owner_trashold,
-        )  # TODO: see what it takes to get the utility matrix
+        )
         node.children[tuple(joint_action)] = Node(
-            parent=node, utility_matrix=child_utility_matrix
+            parent=node, utility_matrix=child_utility_matrix, step=node.step + 1
         )
 
-    def solve_node_via_rm_plus(self, node: Node, iterations: int = 2000) -> None:
+    def solve_node_via_rm_plus(self, node: Node, iterations: int = 5000) -> None:
         for _ in range(iterations):
             node.rm_plus_step()
 
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
-    def solve_node_via_rm(self, node: Node, iterations: int = 2000) -> None:
-        for _ in range(iterations):
+    def solve_node_via_rm(self, node: Node) -> None:
+
+        iterations = 0
+        while node.nash_conv() > 0 and iterations < 10000:
             node.rm_step()
+            iterations += 1
+        # print(iterations)
+        if iterations == 10000:
+            self.solve_node_via_rm_plus(
+                node, 10000
+            )  # TODO: nemel bych tady opet inicializovat parametry Node?
 
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
@@ -164,7 +183,7 @@ class Game:
         current_node = self.root
         utility = self.initial_utility
 
-        # print(f"Initial utility\nu: {utility.sum(axis=1)}")
+        print(f"Initial utility\nu: {utility.sum(axis=1)}")
 
         for i in range(num_steps):
             self.solve_node_via_rm(current_node)
@@ -172,18 +191,18 @@ class Game:
             joint_action = current_node.sample_joint_action()
 
             actions_in_steps.append(joint_action)
-
             utility = get_utility(
                 utility,
                 joint_action,
-                self.votes,
+                self.intensities_fn(current_node.step, self.votes),
                 self.is_owner,
                 self.owner_loss,
                 self.other_loss,
                 self.owner_trashold,
             )
+
             self.add_child(current_node, joint_action, utility, self.votes)
             current_node = current_node.children[tuple(joint_action)]
-
             print(f"DAY {i} \na: {joint_action} \nu: {np.floor(utility.sum(axis=1))}")
+
         return actions_in_steps, utility, strategies_in_steps
