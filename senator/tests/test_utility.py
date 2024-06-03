@@ -44,7 +44,7 @@ def test_get_utility_owner_loss() -> None:
     is_owner = np.zeros((3, 17))
     is_owner[0] = np.ones(17)
     assert (
-        get_utility(previous_utility, [1, 1, 1], np.ones(17), is_owner, 1, 0, 2)[0][0]
+        get_utility(previous_utility, [1, 1, 1], np.ones(17), is_owner, 1, 0, -1)[0][0]
         == 1
     )
 
