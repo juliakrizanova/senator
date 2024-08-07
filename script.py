@@ -14,9 +14,10 @@ FILE_PATH = "w0_data.csv"
 WEEK = 0
 
 # Nastavit podle toho, kolik návštěv za dýne bude chtít stihnout. Každý týden to může být jinak
-WEEK_LENGTH = 7
+LAST_WEEK_LENGTH = 7  # Počet dní v posledním období
+WEEK_LENGTH = 7  # Počet dní v aktuálním období
 
-# Doplnit poporade oblasti, jak je senátor navštíví
+# Doplnit poporade oblasti, jak je senátor navštívil v posledním období
 this_week_actions = [0, 1, 2, 3, 4, 5, 6]
 
 # Hodnoty OWNER_LOSS a OTHER_LOSS jsou nastavene dost od oka. V souboru parameters.pdf je uvedeno, kolik procent hlasu zbyde za 5/6/7 dnu, pokud mame dane hodnoty parametru
@@ -34,7 +35,9 @@ if WEEK != 0:
     # Načítání dat z předchozího týdne, inicializace hry a spuštění greedy search pro spočtení akcí ostatních hráčů
     votes, initial_utility, is_owner = parse_data(load_data(f"w{WEEK-1}_data.csv"))
     game = Game(initial_utility, votes, is_owner, OWNER_LOSS, OTHER_LOSS)
-    actions_in_steps, utility, strategies_in_steps = game.run_greedy_search(WEEK_LENGTH)
+    actions_in_steps, utility, strategies_in_steps = game.run_greedy_search(
+        LAST_WEEK_LENGTH
+    )
 
     # Pokud by senatáro dodával data i za jiné kandidáty, tak by se to muselo upravit zde
     for i in range(len(actions_in_steps)):
