@@ -17,7 +17,7 @@ WEEK = 0
 WEEK_LENGTH = 7
 
 # Doplnit poporade oblasti, jak je senátor navštíví
-this_week_actions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+this_week_actions = [0, 1, 2, 3, 4, 5, 6]
 
 # Hodnoty OWNER_LOSS a OTHER_LOSS jsou nastavene dost od oka. V souboru parameters.pdf je uvedeno, kolik procent hlasu zbyde za 5/6/7 dnu, pokud mame dane hodnoty parametru
 OWNER_LOSS = 0.9
