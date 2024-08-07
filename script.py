@@ -56,6 +56,10 @@ if WEEK != 0:
 
 """ VYTVORENI GRAFU PRO SENATORA
     1. Načtení dat z CSV souboru
+    2. Inicializace hry
+    3. Spuštění greedy search pro spočtení akcí
+    4. Spočítání počtu návštěv v jednotlivých oblastech senátorem
+    5. Vytvoření grafu
 """
 votes, initial_utility, is_owner = parse_data(load_data(f"w{WEEK}_data.csv"))
 game_next = Game(initial_utility, votes, is_owner, OWNER_LOSS, OTHER_LOSS)
@@ -69,10 +73,10 @@ weekly_actions = np.bincount(senator_actions, minlength=17)
 
 plt.figure(figsize=(14, 8))
 
-# Values from 0 to 16 (or the length of weekly_actions)
+# Čísla oblastí 1 až 17
 values = np.arange(len(weekly_actions)) + 1
 
-# Plot a single bar for each entry in weekly_actions
+# PLOTĚNÍ GRAFU
 plt.bar(
     values,
     weekly_actions,
