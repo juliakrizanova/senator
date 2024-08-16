@@ -175,6 +175,38 @@ class Game:
         if (conv := node.nash_conv()) >= 0.001:
             print(f"Nash Convexity is {conv}, something is wrong...")
 
+    def compute_period_utility(
+        self, actions_in_steps: list, votes: np.ndarray
+    ) -> np.ndarray:
+        utility = self.initial_utility
+        for i, joint_action in enumerate(actions_in_steps):
+            utility = get_utility(
+                utility,
+                joint_action,
+                self.intensities_fn(i, votes),
+                self.is_owner,
+                self.owner_loss,
+                self.other_loss,
+                self.owner_trashold,
+            )
+        return utility
+
+    def compute_modified_utility(
+        self, actions_in_steps: list, votes: np.ndarray
+    ) -> np.ndarray:
+        utility = self.initial_utility
+        for i, joint_action in enumerate(actions_in_steps):
+            utility = get_utility(
+                utility,
+                joint_action,
+                self.intensities_fn(i, votes),
+                self.is_owner,
+                self.owner_loss,
+                self.other_loss,
+                self.owner_trashold,
+            )
+        return utility
+
     def run_greedy_search(self, num_steps: int = 7) -> tuple:
 
         actions_in_steps = []
