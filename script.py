@@ -1,8 +1,9 @@
-from senator.utility import *
-from senator.game import *
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
+from senator.game import *
+from senator.utility import *
 
 # V souboru utility.py zmen parameter PLAYERS, aby odpovidal poctu kandidatu
 
@@ -11,14 +12,15 @@ import matplotlib.pyplot as plt
 FILE_PATH = "w0_data.csv"
 
 # Tento parametr bude chtít před každým spuštěním změnit, jinak se přepíšou data v souborech!
-WEEK = 0
+WEEK = 2
 
 # Nastavit podle toho, kolik návštěv za dýne bude chtít stihnout. Každý týden to může být jinak
 LAST_WEEK_LENGTH = 7  # Počet dní v posledním období
 WEEK_LENGTH = 7  # Počet dní v aktuálním období
 
 # Doplnit poporade oblasti, jak je senátor navštívil v posledním období
-this_week_actions = [0, 1, 2, 3, 4, 5, 6]
+# Pokud se senator presne ridil planem, nastavit na None
+this_week_actions = None
 
 # Hodnoty OWNER_LOSS a OTHER_LOSS jsou nastavene dost od oka. V souboru parameters.pdf je uvedeno, kolik procent hlasu zbyde za 5/6/7 dnu, pokud mame dane hodnoty parametru
 OWNER_LOSS = 0.9
@@ -33,15 +35,16 @@ OTHER_LOSS = 0.85
 """
 if WEEK != 0:
     # Načítání dat z předchozího týdne, inicializace hry a spuštění greedy search pro spočtení akcí ostatních hráčů
-    votes, initial_utility, is_owner = parse_data(load_data(f"w{WEEK-1}_data.csv"))
+    votes, initial_utility, is_owner = parse_data(load_data(f"w{WEEK - 1}_data.csv"))
     game = Game(initial_utility, votes, is_owner, OWNER_LOSS, OTHER_LOSS)
     actions_in_steps, utility, strategies_in_steps = game.run_greedy_search(
         LAST_WEEK_LENGTH
     )
 
     # Pokud by senatáro dodával data i za jiné kandidáty, tak by se to muselo upravit zde
-    for i in range(len(actions_in_steps)):
-        actions_in_steps[i][0] = this_week_actions[i]
+    if this_week_actions is not None:
+        for i in range(len(actions_in_steps)):
+            actions_in_steps[i][0] = this_week_actions[i]
 
     modified_utility = game.compute_modified_utility(actions_in_steps, votes)
 
