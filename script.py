@@ -41,7 +41,8 @@ if WEEK != 0:
         LAST_WEEK_LENGTH
     )
 
-    # Pokud by senatáro dodával data i za jiné kandidáty, tak by se to muselo upravit zde
+    # (Pokud by senatáro dodával data i za jiné kandidáty, tak by se to muselo upravit zde)
+    # Jestli nam senator rekl ze se minuly tyden choval jinak nez podle planu, tady rikame to co senator skutecne delal
     if this_week_actions is not None:
         for i in range(len(actions_in_steps)):
             actions_in_steps[i][0] = this_week_actions[i]
