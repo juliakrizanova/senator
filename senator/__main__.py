@@ -1,8 +1,71 @@
 from senator.utility import *
 from senator.game import *
+import argparse
+import numpy as np
+from senator.intensities import INTENSITIES
 
-votes, initial_utility = parse_data(load_data(FILE_PATH))
 
-game = Game(initial_utility,votes)
+def main() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
-game.run_greedy_search()
+    parser = argparse.ArgumentParser(
+        description="Run the senator game simulation with specified parameters.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.add_argument(
+        "--num_steps",
+        type=int,
+        default=7,
+        help="Number of steps for which the greedy algorithm is run.",
+    )
+
+    parser.add_argument(
+        "--owner_loss",
+        type=float,
+        default=0.9,
+        help="Loss for the owner.",
+    )
+    parser.add_argument(
+        "--other_loss", type=float, default=0.8, help="Loss for others."
+    )
+
+    parser.add_argument(
+        "--intensities",
+        default="identity",
+        help="Set the intensities function.",
+        choices=INTENSITIES.keys(),
+    )
+
+    parser.add_argument(
+        "--file_path",
+        type=str,
+        default=FILE_PATH,
+        help="Path to the file containing the data.",
+    )
+
+    parser.add_argument(
+        "--owner_trashold",
+        type=float,
+        default=-1,
+        help="Threshold for the owner. Set to -1 for fixed ownership model.",
+    )
+
+    args = parser.parse_args()
+
+    votes, initial_utility, is_owner = parse_data(load_data(args.file_path))
+    game = Game(
+        initial_utility,
+        votes,
+        is_owner,
+        args.owner_loss,
+        args.other_loss,
+        args.owner_trashold,
+        args.intensities,
+    )
+
+    actions_in_steps, final_utility, strategies = game.run_greedy_search(args.num_steps)
+    return actions_in_steps, final_utility, strategies
+
+
+if __name__ == "__main__":
+    main()
